@@ -1,4 +1,5 @@
 #include "emlabcpp/types.h"
+#include "emlabcpp/concepts.h"
 
 #pragma once
 
@@ -7,8 +8,6 @@ namespace emlabcpp {
 /// Generic class to represent view of some container.
 ///
 /// The view stores iterators to the input container and acts as container.
-///
-/// Note: is_view_v<T> can be used to detect if T is view<I>
 ///
 template <typename Iterator>
 class view {
@@ -74,10 +73,6 @@ class view {
 template <typename Container>
 view(Container &cont) -> view<iterator_of_t<Container>>;
 
-/// Support for our deduction guide to types - is_view_v
-template <typename Iter>
-struct detail::is_view_impl<view<Iter>> : std::true_type {};
-
 /// Creates view over 'n' items of dataset starting at 'begin'
 /// This does not check validity of the range!
 template <typename Iter, typename Count>
@@ -96,10 +91,12 @@ constexpr view<iterator_of_t<Container>> trim_view(Container &cont, float r) {
 }
 
 /// Returns view to the Container in reverse order.
-template <typename Container,
-          typename = std::enable_if_t<std::is_reference_v<Container> || is_view_v<Container>>>
+template <referenceable_range Container>
 constexpr auto reversed(Container &&container) -> view<decltype(container.rbegin())> {
         return {container.rbegin(), container.rend()};
 }
 
 } // namespace emlabcpp
+
+template <typename Iterator>
+inline constexpr bool std::ranges::enable_borrowed_range<emlabcpp::view<Iterator>> = true;

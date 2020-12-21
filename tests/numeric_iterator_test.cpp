@@ -20,3 +20,14 @@ TEST(numeric_iterator, operators) {
 
         EXPECT_EQ(r.begin() + 10, r.end());
 }
+
+TEST(numeric_itertor, cmp) {
+        numeric_iterator a{2};
+        numeric_iterator b{3};
+        numeric_iterator c{3};
+
+        EXPECT_EQ(b, c);
+        EXPECT_NE(a, b);
+        EXPECT_LT(a, b);
+        EXPECT_GT(c, a);
+}

@@ -30,6 +30,8 @@ class numeric_iterator : public generic_iterator<numeric_iterator<T>> {
         T val_;
 
       public:
+	constexpr numeric_iterator() = default;
+
         // Initializes iterator to value val
         constexpr numeric_iterator(T val) : val_(std::forward<T>(val)) {}
 
@@ -45,14 +47,11 @@ class numeric_iterator : public generic_iterator<numeric_iterator<T>> {
                 return *this;
         }
 
-        constexpr bool operator<(const numeric_iterator &other) const { return val_ < other.val_; }
-        constexpr bool operator==(const numeric_iterator &other) const {
-                return val_ == other.val_;
-        }
-
         constexpr std::ptrdiff_t operator-(const numeric_iterator &other) const {
                 return static_cast<std::ptrdiff_t>(val_) - static_cast<std::ptrdiff_t>(other.val_);
         }
+
+	friend constexpr auto operator<=>(const numeric_iterator&, const numeric_iterator&) = default;
 };
 
 /// Builds numeric view over interval [from, to)

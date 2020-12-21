@@ -34,6 +34,8 @@ class access_iterator : public generic_iterator<access_iterator<Iterator, Access
         using value_type =
             typename std::iterator_traits<access_iterator<Iterator, AccessFunction>>::value_type;
 
+        constexpr access_iterator() = default;
+
         constexpr access_iterator(Iterator current, AccessFunction f)
             : current_(std::move(current)), fun_(std::move(f)) {}
 
@@ -59,6 +61,10 @@ class access_iterator : public generic_iterator<access_iterator<Iterator, Access
         constexpr std::ptrdiff_t operator-(const access_iterator &other) {
                 return current_ - other.current_;
         }
+
+        friend constexpr auto operator<=>(const access_iterator &lh, const access_iterator &rh) {
+                return lh.current_ <=> rh.current_;
+        };
 };
 
 /// Creates view ver container cont with AccessFunction f.

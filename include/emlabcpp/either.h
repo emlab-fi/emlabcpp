@@ -119,8 +119,7 @@ class either {
 
         [[nodiscard]] constexpr bool is_left() const { return id_ == item::LEFT; }
 
-        template <typename LeftFunction>
-        auto convert_left(LeftFunction &&left_f) & {
+        auto convert_left(std::invocable<LH &> auto &&left_f) & {
                 using return_either = either<decltype(left_f(left_)), right_item>;
 
                 if (id_ == item::LEFT) {
@@ -130,8 +129,7 @@ class either {
                 return return_either{right_};
         }
 
-        template <typename LeftFunction>
-        auto convert_left(LeftFunction &&left_f) && {
+        auto convert_left(std::invocable<LH &&> auto &&left_f) && {
                 using return_either = either<decltype(left_f(std::move(left_))), right_item>;
 
                 if (id_ == item::LEFT) {
@@ -141,8 +139,7 @@ class either {
                 return return_either{std::move(right_)};
         }
 
-        template <typename RightFunction>
-        auto convert_right(RightFunction &&right_f) & {
+        auto convert_right(std::invocable<RH &> auto &&right_f) & {
                 using return_either = either<left_item, decltype(right_f(right_))>;
 
                 if (id_ == item::LEFT) {
@@ -152,8 +149,7 @@ class either {
                 return return_either{right_f(right_)};
         }
 
-        template <typename RightFunction>
-        auto convert_right(RightFunction &&right_f) && {
+        auto convert_right(std::invocable<RH &&> auto &&right_f) && {
                 using return_either = either<left_item, decltype(right_f(std::move(right_)))>;
 
                 if (id_ == item::LEFT) {
@@ -163,8 +159,7 @@ class either {
                 return return_either{right_f(std::move(right_))};
         }
 
-        template <typename LeftFunction, typename RightFunction>
-        void match(LeftFunction &&left_f, RightFunction &&right_f) & {
+        void match(std::invocable<LH &> auto &&left_f, std::invocable<RH &> auto &&right_f) & {
                 if (id_ == item::LEFT) {
                         left_f(left_);
                 } else {
@@ -172,8 +167,8 @@ class either {
                 }
         }
 
-        template <typename LeftFunction, typename RightFunction>
-        void match(LeftFunction &&left_f, RightFunction &&right_f) const & {
+        void match(std::invocable<const LH &> auto &&left_f,
+                   std::invocable<const RH &> auto &&right_f) const & {
                 if (id_ == item::LEFT) {
                         left_f(left_);
                 } else {
@@ -181,8 +176,7 @@ class either {
                 }
         }
 
-        template <typename LeftFunction, typename RightFunction>
-        void match(LeftFunction &&left_f, RightFunction &&right_f) && {
+        void match(std::invocable<LH &&> auto &&left_f, std::invocable<RH &&> auto &&right_f) && {
                 if (id_ == item::LEFT) {
                         left_f(std::move(left_));
                 } else {
@@ -207,8 +201,7 @@ class either {
                 return right_;
         }
 
-        template <typename UnaryFunction>
-        auto bind_left(UnaryFunction &&left_f) & {
+        auto bind_left(std::invocable<LH &> auto &&left_f) & {
                 using return_either = decltype(left_f(left_));
 
                 static_assert(std::is_same_v<typename return_either::right_item, right_item>,
@@ -220,8 +213,7 @@ class either {
 
                 return return_either{right_};
         }
-        template <typename UnaryFunction>
-        auto bind_left(UnaryFunction &&left_f) && {
+        auto bind_left(std::invocable<LH &&> auto &&left_f) && {
                 using return_either = decltype(left_f(std::move(left_)));
 
                 static_assert(std::is_same_v<typename return_either::right_item, right_item>,
@@ -234,8 +226,7 @@ class either {
                 return return_either{std::move(right_)};
         }
 
-        template <typename UnaryFunction>
-        auto bind_right(UnaryFunction &&right_f) & {
+        auto bind_right(std::invocable<RH &> auto &&right_f) & {
                 using return_either = decltype(right_f(right_));
 
                 static_assert(std::is_same_v<typename return_either::left_item, left_item>,
@@ -247,8 +238,7 @@ class either {
 
                 return return_either{left_};
         }
-        template <typename UnaryFunction>
-        auto bind_right(UnaryFunction &&right_f) && {
+        auto bind_right(std::invocable<RH &&> auto &&right_f) && {
                 using return_either = decltype(right_f(std::move(right_)));
 
                 static_assert(std::is_same_v<typename return_either::left_item, left_item>,
@@ -280,7 +270,7 @@ struct empty_assembly_tag {};
 /// tuple or 'empty_assembly_tag' implicating that some of the optionals was empty.
 template <typename... Ts>
 inline either<std::tuple<Ts...>, empty_assembly_tag>
-assemble_optionals(std::optional<Ts> &&... opt) {
+assemble_optionals(std::optional<Ts> &&...opt) {
         if ((... && opt)) {
                 return std::make_tuple<Ts...>(std::forward<Ts>(*opt)...);
         }
@@ -299,7 +289,7 @@ assemble_optionals(std::optional<Ts> &&... opt) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 template <typename FirstE, typename... Eithers>
-inline auto assemble_left_collect_right(FirstE &&first, Eithers &&... others) {
+inline auto assemble_left_collect_right(FirstE &&first, Eithers &&...others) {
         static_assert(are_same_v<typename std::decay_t<Eithers>::right_item...>,
                       "Right items of Eithers have to be same for collection!");
 

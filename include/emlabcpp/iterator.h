@@ -19,9 +19,8 @@ namespace emlabcpp {
 ///  - const_reference operator*() const;
 ///  - Deriver& operator+=(difference_type);
 ///  - Deriver& operator-=(difference_type);
-///  - bool operator<(const Derived & other);
-///  - bool operator==(const Derived & other);
 ///  - difference_type operator-(const Derived& other);
+///  - friend auto operator<=>(const Derived &, const Derived &);
 ///
 /// Give nthese methods, the generic iterator provides additional methods thanks to CRTP mechanics:
 ///  - pointer operator->();
@@ -32,11 +31,6 @@ namespace emlabcpp {
 ///  - Derived& operator--(int);
 ///  - Derived operator+(difference_type);
 ///  - Derived operator-(difference_type);
-///
-/// Additional to that, following free functions are usable:
-///  - bool operator>(const generic_iterator<Derived> &, const generic_iterator<Derived>&)
-///  - bool operator<=(const generic_iterator<Derived> &, const generic_iterator<Derived>&)
-///  - bool operator!=(const generic_iterator<Derived> &, const generic_iterator<Derived>&)
 ///
 ///
 template <typename Derived>
@@ -82,14 +76,6 @@ class generic_iterator {
                 return copy;
         }
 
-        constexpr bool operator<(const generic_iterator<Derived> &other) const {
-                return impl() < other.impl();
-        }
-
-        constexpr bool operator==(const generic_iterator<Derived> &other) const {
-                return impl() == other.impl();
-        }
-
         constexpr Derived operator+(difference_type v) const {
                 auto copy = impl();
                 copy += v;
@@ -101,33 +87,9 @@ class generic_iterator {
                 copy -= v;
                 return copy;
         }
+	
+	friend constexpr auto operator<=>(const generic_iterator<Derived>&, const generic_iterator<Derived>&) = default;
 };
 
-/// A > B iff B < A
-template <typename Derived>
-constexpr bool operator>(const generic_iterator<Derived> &lh, const generic_iterator<Derived> &rh) {
-        return rh < lh;
-}
-
-/// A <= B iff !( B > A )
-template <typename Derived>
-constexpr bool operator<=(const generic_iterator<Derived> &lh,
-                          const generic_iterator<Derived> &rh) {
-        return !(lh > rh);
-}
-
-/// A >= B iff !( B < A )
-template <typename Derived>
-constexpr bool operator>=(const generic_iterator<Derived> &lh,
-                          const generic_iterator<Derived> &rh) {
-        return !(lh < rh);
-}
-
-/// A != B iff !( A == B)
-template <typename Derived>
-constexpr bool operator!=(const generic_iterator<Derived> &lh,
-                          const generic_iterator<Derived> &rh) {
-        return !(lh == rh);
-}
 
 } // namespace emlabcpp

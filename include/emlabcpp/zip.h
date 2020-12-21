@@ -36,7 +36,7 @@ class zip_iterator {
         /// Increases each iterator
         constexpr zip_iterator operator++() {
                 std::apply(
-                    [](auto &&... it) { //
+                    [](auto &&...it) { //
                             (++it, ...);
                     },
                     iters_);
@@ -47,7 +47,7 @@ class zip_iterator {
         /// Decreases each iterator
         constexpr zip_iterator operator--() {
                 std::apply(
-                    [](auto &&... it) { //
+                    [](auto &&...it) { //
                             (++it, ...);
                     },
                     iters_);
@@ -68,7 +68,7 @@ class zip_iterator {
         /// operator* of iterators.
         constexpr auto operator*() {
                 return std::apply(
-                    [](auto &&... it) { //
+                    [](auto &&...it) { //
                             return std::forward_as_tuple((*it)...);
                     },
                     iters_);
@@ -105,12 +105,12 @@ constexpr bool operator!=(const zip_iterator<Iterators...> &lh,
 /// ranges. If the size differs, increments of begin iterator will never be same
 /// as end iterator.
 //
-template <typename... Ts, std::enable_if_t<std::conjunction_v<is_container<Ts>...>> * = nullptr>
-inline auto zip(Ts &&... cont) {
+template <range_cont... Ts>
+inline auto zip(Ts &&...cont) {
         return view(zip_iterator(std::begin(cont)...), zip_iterator(std::end(cont)...));
 }
 
-template <typename Container>
+template <range_cont Container>
 inline auto enumerate(Container &&cont) {
         return zip(range(cont.size()), cont);
 }
@@ -130,9 +130,8 @@ inline auto tuple_zip_impl(TuplesTuple &&tpls, std::index_sequence<ItemIndexes..
 ///
 /// zip(tuple<A,B>(), tuple<C,D>()) -> tuple<tuple<A,C>, <tuple<B,d>>;
 ///
-template <typename Tuple, typename... Tuples, std::enable_if_t<is_std_tuple_v<Tuple>> * = nullptr,
-          std::enable_if_t<std::conjunction_v<is_std_tuple<std::decay_t<Tuples>>...>> * = nullptr>
-inline auto zip(Tuple &&frst, Tuples &&... tpls) {
+template <get_cont Tuple, get_cont... Tuples>
+inline auto zip(Tuple &&frst, Tuples &&...tpls) {
         static_assert(((static_size_v<Tuple> == static_size_v<Tuples>)&&...),
                       "All tuples has to be of same size in zip");
         return tuple_zip_impl(std::make_tuple(frst, tpls...),

@@ -19,16 +19,6 @@ template <typename Container>
 using iterator_of_t = typename iterator_of<Container>::type;
 
 // ------------------------------------------------------------------------------------------------
-/// is_view<T>::value marks whenever is some type of temporary view - not owning of the data
-namespace detail {
-template <typename>
-struct is_view_impl : std::false_type {};
-} // namespace detail
-
-template <typename T>
-constexpr bool is_view_v = detail::is_view_impl<std::decay_t<T>>::value;
-
-// ------------------------------------------------------------------------------------------------
 /// are_same<Ts..>::value is true if all Ts... are equal types.
 template <typename...>
 struct are_same;
@@ -136,24 +126,6 @@ struct is_container {
 
 template <typename T>
 constexpr bool is_container_v = is_container<T>::value;
-
-// ------------------------------------------------------------------------------------------------
-/// has_push_back<T>::value is true in case type T has T::push_back(T::value_type) method
-template <typename T>
-struct has_push_back {
-
-        template <typename U, typename = decltype(std::declval<U>().push_back(
-                                  std::declval<typename U::value_type>()))>
-        static std::true_type test(int);
-
-        template <typename>
-        static std::false_type test(...);
-
-        static constexpr bool value = decltype(test<T>(0))::value;
-};
-
-template <typename T>
-constexpr bool has_push_back_v = has_push_back<std::decay_t<T>>::value;
 
 // ------------------------------------------------------------------------------------------------
 /// @{

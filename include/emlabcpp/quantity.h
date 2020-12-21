@@ -4,6 +4,8 @@
 #include <ratio>
 #include <type_traits>
 
+#include "emlabcpp/concepts.h"
+
 #pragma once
 
 namespace emlabcpp {
@@ -27,7 +29,7 @@ namespace emlabcpp {
 /// Credits should go to https://github.com/joboccara/NamedType as I inspired by project by this
 /// blogger!
 ///
-template <typename Derived, typename ValueType = float>
+template <typename Derived, assignment_arithmetic ValueType = float>
 class quantity {
         ValueType value_;
 
@@ -76,6 +78,8 @@ class quantity {
         }
 
         static std::string get_unit() { return ""; }
+
+	friend constexpr auto operator<=>(const quantity&, const quantity&) = default;
 };
 
 /// Sum of quantities with same Derived and value_type
@@ -96,20 +100,6 @@ constexpr Derived operator-(quantity<Derived, ValueType>       lhs,
 template <typename Derived, typename ValueType>
 constexpr Derived operator-(const quantity<Derived, ValueType> val) {
         return Derived{-*val};
-}
-
-/// Comparison of internal values of quantity
-template <typename Derived, typename ValueType>
-constexpr bool operator==(const quantity<Derived, ValueType> lhs,
-                          const quantity<Derived, ValueType> rhs) {
-        return *lhs == *rhs;
-}
-
-/// Comparasion of internal values
-template <typename Derived, typename ValueType>
-constexpr bool operator<(const quantity<Derived, ValueType> lhs,
-                         const quantity<Derived, ValueType> rhs) {
-        return *lhs < *rhs;
 }
 
 /// Multiplication of quantity by it's value_type
@@ -156,33 +146,6 @@ constexpr Derived min(const quantity<Derived, ValueType> lh,
         return Derived(std::min(*lh, *rh));
 }
 
-//---------------------------------------------------------------------------
-
-/// Non-equality of quantites is negation of equality.
-template <typename Derived, typename ValueType>
-constexpr bool operator!=(const quantity<Derived, ValueType> lhs,
-                          const quantity<Derived, ValueType> rhs) {
-        return !(lhs == rhs);
-}
-
-/// Q1 > Q2 iff Q2 < Q1
-template <typename Derived, typename ValueType>
-constexpr bool operator>(const quantity<Derived, ValueType> lhs,
-                         const quantity<Derived, ValueType> rhs) {
-        return rhs < lhs;
-}
-/// Q1 <= Q2 iff !( Q2 > Q1 )
-template <typename Derived, typename ValueType>
-constexpr bool operator<=(const quantity<Derived, ValueType> lhs,
-                          const quantity<Derived, ValueType> rhs) {
-        return !(lhs > rhs);
-}
-/// Q1 >= Q2 iff !( Q2 < Q1 )
-template <typename Derived, typename ValueType>
-constexpr bool operator>=(const quantity<Derived, ValueType> lhs,
-                          const quantity<Derived, ValueType> rhs) {
-        return !(lhs < rhs);
-}
 //---------------------------------------------------------------------------
 
 /// Multiplication of value_type by quantity returns quantity

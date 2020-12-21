@@ -42,9 +42,9 @@ TEST(Algorithm, map_range) {
         EXPECT_EQ(map_range(0, 0, 10, 10, 0), 10);
 }
 
-TEST(Algorithm, curry) {
+TEST(Algorithm, uncurry) {
         auto test_tuple = std::make_tuple(1, 2.f, 3.);
-        curry([&](int a, float b, double c) {
+        uncurry([&](int a, float b, double c) {
                 EXPECT_EQ(a, std::get<int>(test_tuple));
                 EXPECT_EQ(b, std::get<float>(test_tuple));
                 EXPECT_EQ(c, std::get<double>(test_tuple));
@@ -58,6 +58,7 @@ TEST(Algorithm, tail) {
         EXPECT_EQ(tail(test).back(), 3);
         EXPECT_EQ(tail(test, 2).size(), std::size_t{1});
         EXPECT_EQ(tail(test, 2).front(), 3);
+	EXPECT_EQ(tail(tail(test)).front(), 2);
 }
 
 TEST(Algorithm, init) {
@@ -67,6 +68,7 @@ TEST(Algorithm, init) {
         EXPECT_EQ(init(test).back(), 2);
         EXPECT_EQ(init(test, 2).size(), std::size_t{1});
         EXPECT_EQ(init(test, 2).front(), 1);
+	EXPECT_EQ(init(init(test)).front(), 2);
 }
 
 TEST(Algorithm, find_if) {
