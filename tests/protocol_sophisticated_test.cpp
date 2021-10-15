@@ -1,6 +1,7 @@
 #include "emlabcpp/iterators/convert.h"
 #include "emlabcpp/protocol/command_group.h"
 #include "emlabcpp/protocol/handler.h"
+#include "emlabcpp/protocol/streams.h"
 #include "emlabcpp/protocol/tuple.h"
 #include "util.h"
 
@@ -31,7 +32,8 @@ enum compl_ids : uint16_t
         CG = 21,
         CH = 22,
         CI = 23,
-        CJ = 24
+        CJ = 24,
+        CK = 26
 };
 using test_quantity = tagged_quantity< struct vtag, uint32_t >;
 // TODO: test changed endinaess in one subitem
@@ -49,7 +51,8 @@ struct complex_group
         protocol_command< CH >::with_args< test_quantity, uint16_t >,
         protocol_command< CI >::
             with_args< protocol_sized_buffer< uint8_t, protocol_sizeless_message< 8 > >, uint32_t >,
-        protocol_command< CJ >::with_args< protocol_group< uint32_t, uint8_t > > >
+        protocol_command< CJ >::with_args< protocol_group< uint32_t, uint8_t > >,
+        protocol_command< CK >::with_args< bounded< int16_t, -8, 8 > > >
 {
 };
 
@@ -93,7 +96,7 @@ struct valid_test_case : protocol_test_fixture
 
         void generate_name( std::ostream& os ) const final
         {
-                os << "test case for: " << pretty_name< Group >()
+                os << "valid test case for: " << pretty_name< Group >()
                    << "; msg: " << convert_view< int >( expected_buffer );
         }
 };
@@ -104,6 +107,49 @@ make_valid_test_case( typename Group::value_type val, const std::vector< uint8_t
 {
         return [=]() {
                 return new valid_test_case< Group >( val, buff );
+        };
+}
+
+template < typename Group >
+struct invalid_test_case : protocol_test_fixture
+{
+        using handler = protocol_handler< Group >;
+
+        std::vector< uint8_t > input;
+        protocol_error_record  rec;
+
+        invalid_test_case( std::vector< uint8_t > inpt, protocol_error_record rec )
+          : input( std::move( inpt ) )
+          , rec( std::move( rec ) )
+        {
+        }
+
+        void TestBody() final
+        {
+                auto opt_msg = Group::message_type::make( input );
+                EXPECT_TRUE( opt_msg );
+                handler::extract( *opt_msg )
+                    .match(
+                        [&]( auto ) {
+                                FAIL() << "msg was parsed without an error";
+                        },
+                        [&]( auto err ) {
+                                EXPECT_EQ( err, rec );
+                        } );
+        }
+
+        void generate_name( std::ostream& os ) const final
+        {
+                os << "invalid test case for: " << pretty_name< Group >()
+                   << "; msg: " << convert_view< int >( input ) << "; err: " << rec;
+        }
+};
+
+template < typename Group >
+auto make_invalid_test_case( const std::vector< uint8_t >& inpt, protocol_error_record rec )
+{
+        return [=]() {
+                return new invalid_test_case< Group >( inpt, rec );
         };
 }
 
@@ -159,7 +205,11 @@ int main( int argc, char** argv )
                 complex_group::make_val< CJ >( static_cast< uint8_t >( 42 ) ), { 0, 24, 42 } ),
             make_valid_test_case< test_tuple >(
                 test_tuple::make_val( 23657453, 666, std::bitset< 13 >{ 42 }, 6634343 ),
-                { 1, 104, 251, 237, 2, 154, 42, 0, 0, 101, 59, 103 } ) };
+                { 1, 104, 251, 237, 2, 154, 42, 0, 0, 101, 59, 103 } ),
+            make_invalid_test_case< complex_group >(
+                { 0, 26, 0, 16 }, protocol_error_record{ PROTOCOL_NS, BOUNDS_ERR, 2 } )
+
+        };
 
         exec_protocol_test_fixture_test( tests );
         return RUN_ALL_TESTS();

@@ -602,10 +602,12 @@ struct protocol_def< protocol_group< Ds... >, Endianess >
                 return *opt_res;
         }
 
-        static constexpr auto deserialize( const view< const uint8_t* >& buffer )
-            -> either< protocol_result< size_type, value_type >, protocol_error_record >
+        using return_either =
+            either< protocol_result< size_type, value_type >, protocol_error_record >;
+
+        static constexpr auto deserialize( const view< const uint8_t* >& buffer ) -> return_either
         {
-                std::optional< protocol_result< size_type, value_type > > opt_res;
+                std::optional< return_either > opt_res;
 
                 until_index< sizeof...( Ds ) >( [&]< std::size_t i >() {
                         using sub_def =
@@ -613,10 +615,16 @@ struct protocol_def< protocol_group< Ds... >, Endianess >
 
                         sub_def::deserialize( buffer ).match(
                             [&]( auto sub_res ) {
-                                    opt_res = protocol_result< size_type, value_type >{
-                                        sub_res.used, value_type{ sub_res.val } };
+                                    opt_res =
+                                        return_either{ protocol_result< size_type, value_type >{
+                                            sub_res.used, value_type{ sub_res.val } } };
                             },
-                            [&]( protocol_error_record ) {} );
+                            [&]( protocol_error_record rec ) {
+                                    if ( rec.byte_index == 0 ) {
+                                            return;
+                                    }
+                                    opt_res = rec;
+                            } );
                         return bool( opt_res );
                 } );
 

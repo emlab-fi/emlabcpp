@@ -48,8 +48,7 @@ struct protocol_endianess
 };
 
 // Serializes values from definitions Ds to std::variant. The byte message does not contain
-// identificator of variant used, rather the first definition that manages to deserialize the
-// message is used.
+// identificator of variant used. The subdefinition that first manages to parse at least first item is selected. (To be exact: definitions that report error on zero byte index are skipped)
 template < typename... Ds >
 struct protocol_group
 {
