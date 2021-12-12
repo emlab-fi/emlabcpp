@@ -36,6 +36,9 @@ TEST( Algorithm, map_range )
         EXPECT_EQ( map_range( 5, 0, 10, 10, 0 ), 5 );
         EXPECT_EQ( map_range( 10, 0, 10, 10, 0 ), 0 );
         EXPECT_EQ( map_range( 0, 0, 10, 10, 0 ), 10 );
+
+        auto res = map_range< int32_t, int32_t >( -16000, 0, -32768, 0, 65535 );
+        EXPECT_EQ( res, 31999 );
 }
 
 TEST( Algorithm, tail )

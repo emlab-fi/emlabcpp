@@ -42,6 +42,7 @@ constexpr int sign( T&& val )
 template < arithmetic_base T, arithmetic_base U >
 [[nodiscard]] constexpr U map_range( T input, T from_min, T from_max, U to_min, U to_max )
 {
+        static_assert( std::is_signed_v< T > == std::is_signed_v< U > );
         return to_min + ( to_max - to_min ) * static_cast< U >( input - from_min ) /
                             static_cast< U >( from_max - from_min );
 }
